@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0a0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LIFE.EXE">
+<meta name="description" content="Gamifica tu vida con logros personalizados">
+<title>LIFE.EXE</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' fill='%230a0a0f'/%3E%3Ctext x='96' y='130' font-size='100' text-anchor='middle'%3E🏆%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0a0f; --panel:#10101a; --panel2:#16162a;
+  --border:#1e1e3a; --border2:#2a2a4a;
+  --gold:#ffd700; --gold2:#ffaa00; --gold3:#ff8800;
+  --silver:#b0b0c8; --bronze:#cd7f32;
+  --blue:#00aaff; --blue2:#0066cc;
+  --green:#00ff88; --green2:#00cc66;
+  --purple:#aa44ff; --purple2:#7722cc;
+  --red:#ff3355; --red2:#cc1133;
+  --pink:#ff66aa;
+  --text:#e0e0f0; --text2:#a0a0c0; --dim:#555577;
+  --locked:#0d0d1a;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:'VT323',monospace;font-size:18px;color:var(--text);display:flex;flex-direction:column}
+
+/* CRT */
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,136,.02) 2px,rgba(0,255,136,.02) 4px);pointer-events:none;z-index:9999}
+
+/* ── HEADER ── */
+.app-header{
+  background:linear-gradient(180deg,#000 0%,var(--panel) 100%);
+  border-bottom:3px solid var(--gold);
+  padding:10px 16px;
+  display:flex;align-items:center;gap:12px;
+  flex-shrink:0;
+  box-shadow:0 0 30px rgba(255,215,0,.15);
+  z-index:200;
+  position:relative;
+}
+.logo{font-family:'Press Start 2P',monospace;font-size:12px;color:var(--gold);text-shadow:0 0 15px var(--gold2),2px 2px 0 #000;white-space:nowrap}
+.logo span{color:var(--green)}
+.header-right{display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:wrap}
+.xp-section{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.xp-bar-wrap{background:var(--border);border:2px solid var(--dim);width:130px;height:14px;overflow:hidden;position:relative}
+.xp-bar-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--blue));transition:width .8s ease;position:relative}
+.xp-bar-fill::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent,transparent 8px,rgba(255,255,255,.08) 8px,rgba(255,255,255,.08) 10px)}
+.xp-text{font-size:12px;color:var(--gold);white-space:nowrap}
+.lvl-badge{font-family:'Press Start 2P',monospace;font-size:9px;background:var(--gold);color:#000;padding:4px 7px;border:2px solid #000;box-shadow:2px 2px 0 #000;white-space:nowrap}
+.header-counts{font-size:14px;color:var(--dim);white-space:nowrap}
+.header-counts span{color:var(--gold)}
+
+/* ── NAV TABS ── */
+.nav-tabs{
+  display:flex;background:var(--panel);border-bottom:2px solid var(--border);
+  flex-shrink:0;overflow-x:auto;scrollbar-width:none;
+}
+.nav-tabs::-webkit-scrollbar{display:none}
+.nav-tab{
+  padding:10px 14px;font-family:'Press Start 2P',monospace;font-size:7px;
+  color:var(--dim);cursor:pointer;border-bottom:3px solid transparent;
+  white-space:nowrap;transition:all .15s;letter-spacing:.5px;
+  display:flex;align-items:center;gap:6px;
+}
+.nav-tab:hover{color:var(--text);background:rgba(255,255,255,.03)}
+.nav-tab.active{color:var(--gold);border-bottom-color:var(--gold);background:rgba(255,215,0,.05)}
+.nav-tab .n-badge{background:var(--red);color:#fff;font-size:10px;padding:1px 5px;font-family:'VT323',monospace;border-radius:0;min-width:18px;text-align:center}
+
+/* ── PAGES ── */
+.pages{flex:1;overflow:hidden;position:relative}
+.page{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;display:none;padding:16px 16px calc(16px + var(--safe-bottom))}
+.page.active{display:block}
+
+/* scrollbar */
+.page::-webkit-scrollbar{width:6px}
+.page::-webkit-scrollbar-track{background:var(--panel)}
+.page::-webkit-scrollbar-thumb{background:var(--border2);border:1px solid var(--dim)}
+
+/* ── PANELS & CARDS ── */
+.panel{background:var(--panel);border:2px solid var(--border);padding:16px;margin-bottom:16px}
+.panel-title{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--purple);margin-bottom:12px;letter-spacing:1px}
+.section-title{font-family:'Press Start 2P',monospace;font-size:9px;color:var(--gold);text-shadow:0 0 8px rgba(255,215,0,.3);margin-bottom:14px}
+
+/* ── BUTTONS ── */
+.btn{font-family:'Press Start 2P',monospace;font-size:8px;padding:9px 14px;cursor:pointer;border:3px solid;letter-spacing:.5px;transition:all .1s;position:relative;top:0;white-space:nowrap;display:inline-block}
+.btn:active{top:2px}
+.btn-purple{background:var(--purple);color:#fff;border-color:#cc66ff;box-shadow:3px 3px 0 #000,0 0 12px rgba(170,68,255,.25)}
+.btn-purple:hover{box-shadow:4px 4px 0 #000,0 0 20px rgba(170,68,255,.4)}
+.btn-gold{background:var(--gold);color:#000;border-color:var(--gold2);box-shadow:3px 3px 0 #000}
+.btn-gold:hover{box-shadow:4px 4px 0 #000}
+.btn-green{background:var(--green);color:#000;border-color:var(--green2);box-shadow:3px 3px 0 #000}
+.btn-red{background:var(--red);color:#fff;border-color:var(--red2);box-shadow:3px 3px 0 #000}
+.btn-dim{background:var(--border);color:var(--dim);border-color:var(--dim);box-shadow:2px 2px 0 #000}
+.btn-blue{background:var(--blue2);color:#fff;border-color:var(--blue);box-shadow:3px 3px 0 #000}
+.btn-sm{font-size:7px;padding:6px 10px}
+.btn-xs{font-size:6px;padding:4px 8px;border-width:2px;box-shadow:2px 2px 0 #000}
+
+/* ── FORM ELEMENTS ── */
+.form-group{margin-bottom:14px}
+.form-label{display:block;font-family:'Press Start 2P',monospace;font-size:7px;color:var(--dim);margin-bottom:6px;letter-spacing:.5px}
+.form-input,.form-select,.form-textarea{width:100%;background:rgba(0,0,0,.5);border:2px solid var(--border);color:var(--text);font-family:'VT323',monospace;font-size:18px;padding:9px 12px;outline:none;transition:border-color .2s;-webkit-appearance:none}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--purple)}
+.form-textarea{resize:vertical;min-height:80px;line-height:1.4}
+.form-textarea::placeholder,.form-input::placeholder{color:var(--dim);opacity:.7}
+.form-select option{background:var(--panel)}
+.input-row{display:flex;gap:8px;flex-wrap:wrap}
+.input-row .form-input{flex:1;min-width:140px}
+
+/* ── AI PANEL ── */
+.ai-panel{
+  background:var(--panel);border:2px solid var(--purple);padding:18px;margin-bottom:20px;
+  position:relative;box-shadow:0 0 20px rgba(170,68,255,.1),inset 0 0 20px rgba(170,68,255,.02);
+}
+.ai-panel::before{content:'◆ IA MOTOR DE LOGROS ◆';position:absolute;top:-9px;left:16px;background:var(--bg);padding:0 8px;font-family:'Press Start 2P',monospace;font-size:6px;color:var(--purple);letter-spacing:1px}
+.ai-controls{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center}
+.ai-status{font-size:14px;color:var(--purple);display:none;align-items:center;gap:6px}
+.ai-status.visible{display:flex}
+.dot-pulse{width:7px;height:7px;background:var(--purple);border-radius:50%;animation:pulse .7s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.6)}}
+
+/* ── ACHIEVEMENT CARDS ── */
+.ach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.ach-card{
+  background:var(--panel);border:2px solid var(--border);padding:14px;
+  display:flex;gap:12px;align-items:flex-start;
+  transition:transform .15s,box-shadow .15s;cursor:default;
+  position:relative;overflow:hidden;
+}
+.ach-card::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.015) 0%,transparent 50%);pointer-events:none}
+.ach-card:hover{transform:translateY(-2px)}
+.ach-card.unlocked{border-color:var(--gold2)}
+.ach-card.unlocked:hover{box-shadow:0 6px 20px rgba(255,170,0,.15)}
+.ach-card.rarity-rare{border-color:var(--blue)}
+.ach-card.rarity-epic{border-color:var(--purple)}
+.ach-card.rarity-legendary{border-color:var(--gold)}
+.ach-card.rarity-legendary.unlocked{animation:legendGlow 2.5s ease-in-out infinite}
+@keyframes legendGlow{0%,100%{box-shadow:0 0 10px rgba(255,215,0,.15)}50%{box-shadow:0 0 25px rgba(255,215,0,.4)}}
+.ach-card.locked{opacity:.55;filter:grayscale(.7)}
+
+/* pixel art icon */
+.ach-icon-wrap{width:60px;height:60px;flex-shrink:0;position:relative}
+.ach-icon-wrap canvas{width:60px!important;height:60px!important;image-rendering:pixelated;border:2px solid var(--border);display:block}
+.ach-card.unlocked .ach-icon-wrap canvas{border-color:var(--gold2)}
+.ach-card.rarity-epic .ach-icon-wrap canvas{border-color:var(--purple)}
+.ach-card.rarity-legendary .ach-icon-wrap canvas{border-color:var(--gold)}
+.rarity-pip{position:absolute;top:3px;right:3px;width:7px;height:7px;border-radius:50%}
+
+.ach-info{flex:1;min-width:0}
+.ach-set-name{font-size:12px;color:var(--dim);margin-bottom:2px;opacity:.7}
+.ach-name{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--text);margin-bottom:5px;line-height:1.6;word-break:break-word}
+.ach-card.unlocked .ach-name{color:var(--gold)}
+.ach-desc{font-size:15px;color:var(--text2);line-height:1.3;margin-bottom:8px}
+.ach-meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.ach-xp{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--green)}
+.cat-tag{font-size:12px;padding:2px 6px;border:1px solid;opacity:.8;white-space:nowrap}
+.rarity-tag{font-size:13px}
+.ach-date{font-size:13px;color:var(--dim)}
+.ach-actions{display:flex;gap:6px;flex-wrap:wrap}
+.btn-unlock{font-size:13px;padding:4px 10px;background:transparent;border:2px solid var(--green);color:var(--green);cursor:pointer;font-family:'VT323',monospace;transition:all .1s;white-space:nowrap}
+.btn-unlock:hover{background:var(--green);color:#000}
+.btn-del{font-size:12px;padding:3px 7px;background:transparent;border:1px solid var(--red);color:var(--red);cursor:pointer;font-family:'VT323',monospace;opacity:.5;transition:opacity .1s}
+.btn-del:hover{opacity:1;background:rgba(255,51,85,.1)}
+
+/* cat tag colors */
+.cat-salud{color:#00ff88;border-color:#00ff88}
+.cat-fitness{color:#ff8844;border-color:#ff8844}
+.cat-trabajo{color:#00aaff;border-color:#00aaff}
+.cat-social{color:#ff66aa;border-color:#ff66aa}
+.cat-aprendizaje{color:#aa44ff;border-color:#aa44ff}
+.cat-finanzas{color:#ffd700;border-color:#ffd700}
+.cat-creatividad{color:#ff4499;border-color:#ff4499}
+.cat-personal{color:#b0b0c8;border-color:#b0b0c8}
+
+/* rarity colors */
+.rarity-common{color:var(--silver)}
+.rarity-rare{color:var(--blue)}
+.rarity-epic{color:var(--purple)}
+.rarity-legendary{color:var(--gold)}
+.pip-common{background:var(--silver)}
+.pip-rare{background:var(--blue)}
+.pip-epic{background:var(--purple)}
+.pip-legendary{background:var(--gold)}
+
+/* ── SET GROUP ── */
+.set-group{margin-bottom:24px}
+.set-header{
+  background:var(--panel2);border:2px solid var(--border2);padding:10px 14px;
+  margin-bottom:12px;display:flex;align-items:center;gap:10px;
+  cursor:pointer;transition:border-color .15s;
+}
+.set-header:hover{border-color:var(--blue)}
+.set-header-name{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--blue)}
+.set-header-stats{font-size:14px;color:var(--dim);margin-left:auto;display:flex;gap:12px;align-items:center}
+.set-progress-bar{width:80px;height:8px;background:var(--locked);border:1px solid var(--border);overflow:hidden}
+.set-progress-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--green));transition:width .5s}
+.set-body{overflow:hidden;transition:max-height .3s ease}
+
+/* ── FILTER BAR ── */
+.filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.fbtn{font-family:'VT323',monospace;font-size:16px;padding:5px 12px;background:var(--locked);border:2px solid var(--border);color:var(--dim);cursor:pointer;transition:all .1s}
+.fbtn.active,.fbtn:hover{border-color:var(--blue);color:var(--blue);background:rgba(0,170,255,.06)}
+
+/* ── STATS PAGE ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:24px}
+.stat-card{background:var(--panel);border:2px solid var(--border);padding:16px;text-align:center}
+.stat-val{font-family:'Press Start 2P',monospace;font-size:20px;color:var(--gold);display:block;margin-bottom:4px;text-shadow:0 0 12px rgba(255,215,0,.3)}
+.stat-lbl{font-size:14px;color:var(--dim)}
+.prog-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.prog-label{font-size:15px;width:110px;flex-shrink:0}
+.prog-bar{flex:1;height:18px;background:var(--locked);border:2px solid var(--border);overflow:hidden}
+.prog-fill{height:100%;transition:width .8s ease;position:relative}
+.prog-fill::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent,transparent 8px,rgba(0,0,0,.15) 8px,rgba(0,0,0,.15) 10px)}
+.prog-pct{font-size:14px;color:var(--dim);width:36px;text-align:right}
+
+/* ── HISTORY ── */
+.history-list{display:flex;flex-direction:column;gap:10px}
+.hist-item{
+  background:var(--panel);border:2px solid var(--gold2);padding:12px 14px;
+  display:flex;align-items:center;gap:12px;
+  position:relative;overflow:hidden;
+}
+.hist-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--gold2)}
+.hist-canvas{width:44px!important;height:44px!important;image-rendering:pixelated;border:2px solid var(--gold2);flex-shrink:0}
+.hist-info{flex:1;min-width:0}
+.hist-name{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--gold);margin-bottom:4px;line-height:1.5}
+.hist-meta{font-size:14px;color:var(--dim);display:flex;gap:10px;flex-wrap:wrap}
+.hist-xp{color:var(--green)}
+
+/* ── SOCIAL PAGE ── */
+.social-user-card{
+  background:var(--panel);border:2px solid var(--border);padding:14px;margin-bottom:12px;
+  display:flex;gap:12px;align-items:flex-start;transition:border-color .15s;cursor:pointer;
+}
+.social-user-card:hover{border-color:var(--blue)}
+.user-avatar{width:52px;height:52px;flex-shrink:0;image-rendering:pixelated;border:2px solid var(--border)}
+.user-info{flex:1}
+.user-name{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--blue);margin-bottom:5px}
+.user-stats{font-size:14px;color:var(--dim);display:flex;gap:10px;flex-wrap:wrap}
+.user-stats span{color:var(--text2)}
+.user-sets-preview{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
+.set-chip{font-size:12px;padding:2px 7px;border:1px solid var(--border2);color:var(--dim);background:var(--locked)}
+.import-section{margin-top:12px}
+
+/* ── SETTINGS ── */
+.api-key-row{display:flex;gap:8px;align-items:flex-end}
+.api-key-row .form-input{flex:1;letter-spacing:2px}
+.key-status{font-size:15px;padding:3px 8px;border:1px solid;display:inline-block;margin-top:6px}
+.key-ok{color:var(--green);border-color:var(--green)}
+.key-err{color:var(--red);border-color:var(--red)}
+.key-none{color:var(--dim);border-color:var(--dim)}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.show{display:flex}
+.modal{background:var(--panel);border:3px solid var(--purple);padding:24px;max-width:480px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 0 40px rgba(170,68,255,.25),6px 6px 0 #000}
+.modal-title{font-family:'Press Start 2P',monospace;font-size:9px;color:var(--purple);margin-bottom:18px;line-height:1.6}
+.modal-actions{display:flex;gap:10px;margin-top:18px;justify-content:flex-end;flex-wrap:wrap}
+.confirm-modal .modal{border-color:var(--red)}
+.confirm-modal .modal-title{color:var(--red)}
+
+/* emoji picker */
+.emoji-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;background:rgba(0,0,0,.3);border:2px solid var(--border);padding:8px}
+.emoji-opt{font-size:22px;text-align:center;cursor:pointer;padding:3px;border:2px solid transparent;transition:all .1s}
+.emoji-opt:hover,.emoji-opt.selected{border-color:var(--purple);background:rgba(170,68,255,.1)}
+
+/* ── POPUP ── */
+.unlock-popup{
+  position:fixed;bottom:80px;right:16px;
+  background:var(--panel);border:3px solid var(--gold);padding:14px 18px;
+  z-index:990;display:none;flex-direction:column;gap:5px;
+  min-width:260px;max-width:320px;
+  box-shadow:0 0 25px rgba(255,215,0,.25),4px 4px 0 #000;
+}
+.unlock-popup.show{display:flex;animation:slideIn .3s ease}
+@keyframes slideIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+.popup-badge{font-family:'Press Start 2P',monospace;font-size:6px;color:var(--gold);letter-spacing:1px}
+.popup-row{display:flex;align-items:center;gap:10px}
+.popup-canvas{width:40px!important;height:40px!important;image-rendering:pixelated;border:2px solid var(--gold);flex-shrink:0}
+.popup-name{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--text);line-height:1.5}
+.popup-xp{font-size:16px;color:var(--green)}
+
+/* ── INSTALL BANNER ── */
+.install-banner{
+  background:linear-gradient(90deg,#1a0a2e,#0a1a2e);
+  border:2px solid var(--blue);padding:10px 14px;
+  display:none;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap;
+}
+.install-banner.show{display:flex}
+.install-banner p{font-size:15px;color:var(--text);flex:1}
+
+/* ── EMPTY ── */
+.empty-state{text-align:center;padding:50px 20px;color:var(--dim);grid-column:1/-1}
+.empty-icon{font-size:56px;margin-bottom:12px;opacity:.25}
+.empty-state p{font-family:'Press Start 2P',monospace;font-size:8px;line-height:2.2}
+
+/* ── RESPONSIVE ── */
+@media(max-width:480px){
+  .ach-grid{grid-template-columns:1fr}
+  .app-header{padding:8px 12px}
+  .logo{font-size:10px}
+  .xp-bar-wrap{width:100px}
+  .header-counts{display:none}
+}
+@media(min-width:768px){
+  .ach-grid{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+}
+
+/* ── TICKER ── */
+.ticker{background:#000;border-top:1px solid var(--gold2);border-bottom:1px solid var(--gold2);padding:5px 0;overflow:hidden;white-space:nowrap;font-size:13px;color:var(--gold2);flex-shrink:0}
+.ticker-inner{display:inline-block;animation:tick 35s linear infinite}
+@keyframes tick{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
+</style>
+</head>
+<body>
+
+<!-- INSTALL BANNER -->
+<div class="install-banner" id="installBanner">
+  <p>📲 Instala LIFE.EXE en tu Android como app</p>
+  <button class="btn btn-blue btn-sm" id="installBtn">INSTALAR</button>
+  <button class="btn btn-dim btn-sm" onclick="document.getElementById('installBanner').classList.remove('show')">✕</button>
+</div>
+
+<!-- HEADER -->
+<header class="app-header">
+  <div class="logo">LIFE<span>.EXE</span></div>
+  <div class="header-right">
+    <div class="lvl-badge" id="lvlBadge">LVL 1</div>
+    <div class="xp-section">
+      <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xpFill" style="width:0%"></div></div>
+      <div class="xp-text" id="xpText">0 XP</div>
+    </div>
+    <div class="header-counts">🏆 <span id="hUnlocked">0</span> &nbsp;⭐ <span id="hTotal">0</span></div>
+  </div>
+</header>
+
+<!-- TICKER -->
+<div class="ticker"><span class="ticker-inner" id="tickerText">⚡ LIFE.EXE CARGADO ⚡ COMIENZA TU AVENTURA ⚡ DESBLOQUEA TU POTENCIAL ⚡</span></div>
+
+<!-- NAV TABS -->
+<nav class="nav-tabs">
+  <div class="nav-tab active" data-page="page-quest" onclick="goPage('page-quest',this)">🎯 OBJETIVOS</div>
+  <div class="nav-tab" data-page="page-unlocked" onclick="goPage('page-unlocked',this)">🏆 DESBLOQUEADOS</div>
+  <div class="nav-tab" data-page="page-history" onclick="goPage('page-history',this)">📜 HISTORIAL</div>
+  <div class="nav-tab" data-page="page-stats" onclick="goPage('page-stats',this)">📊 STATS</div>
+  <div class="nav-tab" data-page="page-social" onclick="goPage('page-social',this)">🌐 SOCIAL</div>
+  <div class="nav-tab" data-page="page-settings" onclick="goPage('page-settings',this)">⚙ CONFIG</div>
+</nav>
+
+<!-- PAGES -->
+<div class="pages">
+
+  <!-- ── OBJETIVOS (pending achievements) ── -->
+  <div class="page active" id="page-quest">
+    <div class="ai-panel">
+      <textarea class="form-textarea" id="aiInput" placeholder="Describe tus metas o algo que quieres lograr...&#10;Ej: 'quiero correr una maratón', 'cambiar de carrera a programación', 'viajar por 3 países este año'"></textarea>
+      <div class="ai-controls">
+        <select class="form-select" style="flex:1;min-width:140px" id="aiCat">
+          <option value="auto">🤖 Auto-detectar categoría</option>
+          <option value="salud">💚 Salud</option>
+          <option value="fitness">🔥 Fitness</option>
+          <option value="trabajo">💼 Trabajo</option>
+          <option value="social">💖 Social</option>
+          <option value="aprendizaje">🎓 Aprendizaje</option>
+          <option value="finanzas">💰 Finanzas</option>
+          <option value="creatividad">🎨 Creatividad</option>
+          <option value="personal">⚡ Personal</option>
+        </select>
+        <select class="form-select" style="width:100px" id="aiCount">
+          <option value="4">4 logros</option>
+          <option value="6" selected>6 logros</option>
+          <option value="8">8 logros</option>
+        </select>
+        <button class="btn btn-purple" onclick="runAI()">✨ GENERAR</button>
+        <div class="ai-status" id="aiStatus"><div class="dot-pulse"></div> Generando...</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div class="section-title" style="margin:0" id="questTitle">MIS OBJETIVOS</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-gold btn-sm" onclick="openCreateModal()">+ MANUAL</button>
+      </div>
+    </div>
+    <div class="filter-bar" id="questFilters">
+      <button class="fbtn active" onclick="setQuestFilter('all',this)">Todos</button>
+      <button class="fbtn" onclick="setQuestFilter('salud',this)">💚 Salud</button>
+      <button class="fbtn" onclick="setQuestFilter('fitness',this)">🔥 Fitness</button>
+      <button class="fbtn" onclick="setQuestFilter('trabajo',this)">💼 Trabajo</button>
+      <button class="fbtn" onclick="setQuestFilter('aprendizaje',this)">🎓 Aprend.</button>
+      <button class="fbtn" onclick="setQuestFilter('finanzas',this)">💰 Finanzas</button>
+      <button class="fbtn" onclick="setQuestFilter('creatividad',this)">🎨 Creativ.</button>
+      <button class="fbtn" onclick="setQuestFilter('personal',this)">⚡ Personal</button>
+    </div>
+    <div id="questContent"></div>
+  </div>
+
+  <!-- ── DESBLOQUEADOS ── -->
+  <div class="page" id="page-unlocked">
+    <div class="section-title">LOGROS DESBLOQUEADOS</div>
+    <div class="filter-bar">
+      <button class="fbtn active" onclick="setUnlockFilter('all',this)">Todos</button>
+      <button class="fbtn" onclick="setUnlockFilter('legendary',this)">🟡 Legendarios</button>
+      <button class="fbtn" onclick="setUnlockFilter('epic',this)">🟣 Épicos</button>
+      <button class="fbtn" onclick="setUnlockFilter('rare',this)">🔵 Raros</button>
+    </div>
+    <div class="ach-grid" id="unlockedGrid"></div>
+  </div>
+
+  <!-- ── HISTORIAL ── -->
+  <div class="page" id="page-history">
+    <div class="section-title">HISTORIAL DE DESBLOQUEOS</div>
+    <div class="history-list" id="historyList"></div>
+  </div>
+
+  <!-- ── STATS ── -->
+  <div class="page" id="page-stats">
+    <div class="section-title">ESTADÍSTICAS</div>
+    <div class="stats-grid" id="statsGrid"></div>
+    <div class="section-title" style="font-size:8px">PROGRESO POR CATEGORÍA</div>
+    <div id="catProgress"></div>
+    <br>
+    <div class="section-title" style="font-size:8px">SETS COMPLETADOS</div>
+    <div id="setsProgress"></div>
+  </div>
+
+  <!-- ── SOCIAL ── -->
+  <div class="page" id="page-social">
+    <div class="section-title">COMUNIDAD</div>
+    <div class="panel" style="margin-bottom:16px">
+      <div class="panel-title">MI PERFIL PÚBLICO</div>
+      <div class="form-group">
+        <label class="form-label">NOMBRE DE USUARIO</label>
+        <div class="input-row">
+          <input class="form-input" id="myUsername" placeholder="Tu nombre de jugador...">
+          <button class="btn btn-green btn-sm" onclick="saveUsername()">GUARDAR</button>
+        </div>
+      </div>
+      <div id="shareStatus" style="font-size:15px;color:var(--dim);margin-top:8px"></div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-blue btn-sm" onclick="exportProfile()">📤 EXPORTAR PERFIL</button>
+        <button class="btn btn-purple btn-sm" onclick="openImportProfile()">📥 IMPORTAR SETS</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">EXPLORAR — SETS DE LA COMUNIDAD</div>
+      <div id="communityList"></div>
+    </div>
+  </div>
+
+  <!-- ── SETTINGS ── -->
+  <div class="page" id="page-settings">
+    <div class="section-title">CONFIGURACIÓN</div>
+    <div class="panel">
+      <div class="panel-title">🤖 MOTOR DE IA</div>
+      <div class="form-group">
+        <label class="form-label">PROVEEDOR</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-purple btn-sm" id="provBtn-anthropic" onclick="selectProvider('anthropic')">🟣 ANTHROPIC</button>
+          <button class="btn btn-dim btn-sm" id="provBtn-gemini" onclick="selectProvider('gemini')">🔵 GOOGLE GEMINI</button>
+        </div>
+      </div>
+      <div class="form-group" id="anthropicKeyGroup">
+        <label class="form-label">ANTHROPIC API KEY</label>
+        <div class="api-key-row">
+          <input class="form-input" id="apiKeyInput" type="password" placeholder="sk-ant-api03-...">
+          <button class="btn btn-purple btn-sm" onclick="saveApiKey()">GUARDAR</button>
+        </div>
+        <p style="font-size:13px;color:var(--dim);margin-top:6px">Obtén tu key en <span style="color:var(--blue)">console.anthropic.com</span></p>
+      </div>
+      <div class="form-group" id="geminiKeyGroup" style="display:none">
+        <label class="form-label">GOOGLE GEMINI API KEY</label>
+        <div class="api-key-row">
+          <input class="form-input" id="geminiKeyInput" type="password" placeholder="AIza...">
+          <button class="btn btn-blue btn-sm" onclick="saveGeminiKey()">GUARDAR</button>
+        </div>
+        <p style="font-size:13px;color:var(--dim);margin-top:6px">Obtén tu key gratis en <span style="color:var(--blue)">aistudio.google.com</span> → Get API key</p>
+      </div>
+      <div id="keyStatus" class="key-status key-none">⬜ Sin clave configurada</div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">💾 DATOS</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-blue btn-sm" onclick="exportData()">📤 EXPORTAR TODO</button>
+        <button class="btn btn-dim btn-sm" onclick="openImportData()">📥 IMPORTAR</button>
+        <button class="btn btn-red btn-sm" onclick="confirmReset()">🗑 RESET</button>
+      </div>
+      <div id="dataStats" style="font-size:14px;color:var(--dim);margin-top:10px"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">📲 INSTALAR EN ANDROID</div>
+      <p style="font-size:15px;color:var(--text2);line-height:1.7;margin-bottom:12px">
+        1. Abre esta página en Chrome para Android<br>
+        2. Toca el menú ⋮ → "Añadir a pantalla de inicio"<br>
+        3. Confirma y ¡listo! Funciona como app nativa
+      </p>
+      <button class="btn btn-blue btn-sm" id="installBtn2">📲 INSTALAR AHORA</button>
+    </div>
+  </div>
+
+</div><!-- /pages -->
+
+<!-- UNLOCK POPUP -->
+<div class="unlock-popup" id="unlockPopup">
+  <div class="popup-badge">⚡ LOGRO DESBLOQUEADO!</div>
+  <div class="popup-row">
+    <canvas class="popup-canvas" id="popupCanvas" width="32" height="32"></canvas>
+    <div>
+      <div class="popup-name" id="popupName"></div>
+      <div class="popup-xp" id="popupXp"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CREATE/EDIT MODAL -->
+<div class="modal-overlay" id="createModal">
+  <div class="modal">
+    <div class="modal-title" id="createModalTitle">✏️ CREAR LOGRO MANUAL</div>
+    <div class="form-group">
+      <label class="form-label">SET / OBJETIVO (nombre del grupo)</label>
+      <input class="form-input" id="mSetName" placeholder="ej: Maratón 2025, Mi Startup...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">NOMBRE DEL LOGRO</label>
+      <input class="form-input" id="mName" placeholder="NOMBRE EN MAYÚSCULAS...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">DESCRIPCIÓN</label>
+      <input class="form-input" id="mDesc" placeholder="¿Qué hay que hacer?">
+    </div>
+    <div class="input-row">
+      <div class="form-group" style="flex:1">
+        <label class="form-label">CATEGORÍA</label>
+        <select class="form-select" id="mCat">
+          <option value="salud">💚 Salud</option>
+          <option value="fitness">🔥 Fitness</option>
+          <option value="trabajo">💼 Trabajo</option>
+          <option value="social">💖 Social</option>
+          <option value="aprendizaje">🎓 Aprendizaje</option>
+          <option value="finanzas">💰 Finanzas</option>
+          <option value="creatividad">🎨 Creatividad</option>
+          <option value="personal">⚡ Personal</option>
+        </select>
+      </div>
+      <div class="form-group" style="flex:1">
+        <label class="form-label">RAREZA</label>
+        <select class="form-select" id="mRarity">
+          <option value="common">⬜ Común (10 XP)</option>
+          <option value="rare">🔵 Raro (25 XP)</option>
+          <option value="epic">🟣 Épico (50 XP)</option>
+          <option value="legendary">🟡 Legendario (100 XP)</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">ICONO (emoji)</label>
+      <div class="emoji-grid" id="emojiPicker"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-dim btn-sm" onclick="closeModal('createModal')">CANCELAR</button>
+      <button class="btn btn-purple btn-sm" onclick="saveManualAch()">GUARDAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE MODAL -->
+<div class="modal-overlay confirm-modal" id="confirmModal">
+  <div class="modal" style="border-color:var(--red)">
+    <div class="modal-title" style="color:var(--red)">⚠️ CONFIRMAR ELIMINACIÓN</div>
+    <p style="font-size:16px;color:var(--text2);line-height:1.6" id="confirmMsg">¿Seguro que quieres eliminar este logro? Esta acción no se puede deshacer.</p>
+    <div class="modal-actions">
+      <button class="btn btn-dim btn-sm" onclick="closeModal('confirmModal')">CANCELAR</button>
+      <button class="btn btn-red btn-sm" id="confirmOkBtn">ELIMINAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT PROFILE MODAL -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal">
+    <div class="modal-title">📥 IMPORTAR SETS DE LOGROS</div>
+    <div class="form-group">
+      <label class="form-label">PEGA EL CÓDIGO DE PERFIL AQUÍ</label>
+      <textarea class="form-textarea" id="importInput" style="min-height:100px;font-size:14px;letter-spacing:1px" placeholder="Pega el código exportado..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-dim btn-sm" onclick="closeModal('importModal')">CANCELAR</button>
+      <button class="btn btn-green btn-sm" onclick="doImportProfile()">IMPORTAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT DATA MODAL -->
+<div class="modal-overlay" id="importDataModal">
+  <div class="modal">
+    <div class="modal-title">📥 IMPORTAR DATOS</div>
+    <div class="form-group">
+      <label class="form-label">JSON DE BACKUP</label>
+      <textarea class="form-textarea" id="importDataInput" style="min-height:100px;font-size:13px" placeholder="Pega el JSON exportado..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-dim btn-sm" onclick="closeModal('importDataModal')">CANCELAR</button>
+      <button class="btn btn-blue btn-sm" onclick="doImportData()">IMPORTAR</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════
+// CONFIG & CONSTANTS
+// ══════════════════════════════════
+const RARITY_XP = {common:10,rare:25,epic:50,legendary:100};
+const RARITY_LABEL = {common:'Común',rare:'Raro',epic:'Épico',legendary:'Legendario'};
+const CAT_META = {
+  salud:      {icon:'💚',color:'#00ff88',label:'Salud'},
+  fitness:    {icon:'🔥',color:'#ff8844',label:'Fitness'},
+  trabajo:    {icon:'💼',color:'#00aaff',label:'Trabajo'},
+  social:     {icon:'💖',color:'#ff66aa',label:'Social'},
+  aprendizaje:{icon:'🎓',color:'#aa44ff',label:'Aprendizaje'},
+  finanzas:   {icon:'💰',color:'#ffd700',label:'Finanzas'},
+  creatividad:{icon:'🎨',color:'#ff4499',label:'Creatividad'},
+  personal:   {icon:'⚡',color:'#b0b0c8',label:'Personal'},
+};
+const EMOJIS = ['🏆','⭐','🔥','💪','🧠','❤️','🌟','🎯','🚀','💰','🎨','📚','🏃','🍎','💤','🤝','🌍','⚡','🎮','🎵','🏋️','🧘','💼','🔑','🌱','💡','🔬','✈️','🎓','🏅','🦋','👑','💎','🌊','🏔️','🌺','🎭','🎪','🤸','🧗'];
+
+// ══════════════════════════════════
+// STATE
+// ══════════════════════════════════
+let achievements = [];
+let history = [];
+let apiKey = '';
+let geminiKey = '';
+let aiProvider = 'gemini'; // 'anthropic' | 'gemini'
+let username = '';
+let selectedEmoji = '🏆';
+let questFilter = 'all';
+let unlockFilter = 'all';
+let editingId = null;
+let pendingDeleteId = null;
+
+// ══════════════════════════════════
+// STORAGE
+// ══════════════════════════════════
+function load() {
+  achievements = JSON.parse(localStorage.getItem('lifeExeAchs') || '[]');
+  history = JSON.parse(localStorage.getItem('lifeExeHistory') || '[]');
+  apiKey = localStorage.getItem('lifeExeApiKey') || '';
+  geminiKey = localStorage.getItem('lifeExeGeminiKey') || '';
+  aiProvider = localStorage.getItem('lifeExeProvider') || 'gemini';
+  username = localStorage.getItem('lifeExeUsername') || '';
+  if (achievements.length === 0) seedDefaults();
+}
+
+function save() {
+  localStorage.setItem('lifeExeAchs', JSON.stringify(achievements));
+  localStorage.setItem('lifeExeHistory', JSON.stringify(history));
+}
+
+function saveApiKey() {
+  apiKey = document.getElementById('apiKeyInput').value.trim();
+  localStorage.setItem('lifeExeApiKey', apiKey);
+  updateKeyStatus();
+}
+
+function saveGeminiKey() {
+  geminiKey = document.getElementById('geminiKeyInput').value.trim();
+  localStorage.setItem('lifeExeGeminiKey', geminiKey);
+  updateKeyStatus();
+}
+
+function selectProvider(p) {
+  aiProvider = p;
+  localStorage.setItem('lifeExeProvider', p);
+  document.getElementById('anthropicKeyGroup').style.display = p==='anthropic' ? '' : 'none';
+  document.getElementById('geminiKeyGroup').style.display = p==='gemini' ? '' : 'none';
+  document.getElementById('provBtn-anthropic').className = 'btn btn-sm ' + (p==='anthropic' ? 'btn-purple' : 'btn-dim');
+  document.getElementById('provBtn-gemini').className = 'btn btn-sm ' + (p==='gemini' ? 'btn-blue' : 'btn-dim');
+  updateKeyStatus();
+}
+
+function saveUsername() {
+  username = document.getElementById('myUsername').value.trim();
+  localStorage.setItem('lifeExeUsername', username);
+  document.getElementById('shareStatus').textContent = username ? `✅ Perfil: ${username}` : '';
+}
+
+function updateKeyStatus() {
+  const el = document.getElementById('keyStatus');
+  if (aiProvider === 'gemini') {
+    if (!geminiKey) { el.className='key-status key-none'; el.textContent='⬜ Sin clave Gemini'; return; }
+    if (geminiKey.startsWith('AIza')) { el.className='key-status key-ok'; el.textContent='✅ Gemini key guardada'; }
+    else { el.className='key-status key-err'; el.textContent='❌ Formato inválido (debe ser AIza...)'; }
+  } else {
+    if (!apiKey) { el.className='key-status key-none'; el.textContent='⬜ Sin clave Anthropic'; return; }
+    if (apiKey.startsWith('sk-ant-')) { el.className='key-status key-ok'; el.textContent='✅ Anthropic key guardada'; }
+    else { el.className='key-status key-err'; el.textContent='❌ Formato inválido (debe ser sk-ant-...)'; }
+  }
+}
+
+function seedDefaults() {
+  const sets = [
+    {setName:'Vida Saludable',items:[
+      {name:'PRIMER PASO',desc:'Completa tu primera rutina de ejercicio',cat:'salud',rarity:'common',icon:'👟'},
+      {name:'HIDRATACIÓN',desc:'Bebe 2 litros de agua durante 7 días seguidos',cat:'salud',rarity:'rare',icon:'💧'},
+      {name:'DORMILÓN ÉPICO',desc:'Mantén 8 horas de sueño por 30 días',cat:'salud',rarity:'epic',icon:'💤'},
+    ]},
+    {setName:'Carrera Profesional',items:[
+      {name:'NETWORKER',desc:'Conecta con 5 profesionales de tu campo',cat:'trabajo',rarity:'rare',icon:'🤝'},
+      {name:'PROYECTO LANZADO',desc:'Publica tu primer proyecto personal online',cat:'trabajo',rarity:'epic',icon:'🚀'},
+    ]},
+  ];
+  let id=1;
+  sets.forEach(s=>{
+    s.items.forEach(a=>{
+      achievements.push({...a,id:id++,setName:s.setName,xp:RARITY_XP[a.rarity],unlocked:false,date:null});
+    });
+  });
+  achievements[0].unlocked = true;
+  achievements[0].date = '2025-01-15';
+  history.push({id:achievements[0].id,name:achievements[0].name,icon:achievements[0].icon,xp:achievements[0].xp,rarity:achievements[0].rarity,cat:achievements[0].cat,date:achievements[0].date,setName:achievements[0].setName});
+  save();
+}
+
+// ══════════════════════════════════
+// PIXEL ART ENGINE
+// ══════════════════════════════════
+// Generate a unique pixel art icon from achievement data
+function generatePixelArt(ach, size=32) {
+  const canvas = document.createElement('canvas');
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  
+  // Deterministic seed from id+name
+  const seed = (ach.id * 31 + ach.name.split('').reduce((s,c)=>s+c.charCodeAt(0),0)) >>> 0;
+  const rng = seededRng(seed);
+  
+  const rarityPalettes = {
+    common:   [['#888','#aaa','#ccc','#444','#ddd'],'#555'],
+    rare:     [['#0af','#08c','#04a','#0cf','#005'],'#003'],
+    epic:     [['#a4f','#84c','#62a','#c6f','#320'],'#210'],
+    legendary:[['#fd0','#fa0','#f80','#ff4','#430'],'#210'],
+  };
+  const [pal, bg] = rarityPalettes[ach.rarity] || rarityPalettes.common;
+  
+  // Background
+  ctx.fillStyle = bg;
+  ctx.fillRect(0,0,size,size);
+  
+  // Draw pixel art based on category + rng
+  const pixelSize = size/8;
+  
+  // Generate symmetric 8x8 sprite (mirror left to right)
+  const sprite = [];
+  for(let y=0;y<8;y++){
+    sprite[y]=[];
+    for(let x=0;x<4;x++){
+      sprite[y][x] = rng() > 0.45 ? Math.floor(rng()*pal.length) : -1;
+    }
+  }
+  
+  // Draw mirrored
+  for(let y=0;y<8;y++){
+    for(let x=0;x<8;x++){
+      const srcX = x<4 ? x : 7-x;
+      const ci = sprite[y][srcX];
+      if(ci>=0){
+        ctx.fillStyle = pal[ci];
+        ctx.fillRect(x*pixelSize, y*pixelSize, pixelSize, pixelSize);
+      }
+    }
+  }
+  
+  // Add rarity shine for epic/legendary
+  if(ach.rarity==='legendary'){
+    ctx.fillStyle='rgba(255,215,0,0.15)';
+    ctx.fillRect(0,0,size,size);
+  }
+  if(ach.rarity==='epic'){
+    ctx.fillStyle='rgba(170,68,255,0.1)';
+    ctx.fillRect(0,0,size,size);
+  }
+  
+  return canvas;
+}
+
+function seededRng(seed) {
+  let s = seed;
+  return function(){
+    s = (s*1664525+1013904223)>>>0;
+    return s/0xffffffff;
+  };
+}
+
+function renderAchIcon(ach, canvasEl) {
+  const src = generatePixelArt(ach, 32);
+  const ctx = canvasEl.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(src,0,0,canvasEl.width,canvasEl.height);
+  if(!ach.unlocked){
+    ctx.fillStyle='rgba(0,0,0,0.65)';
+    ctx.fillRect(0,0,canvasEl.width,canvasEl.height);
+    // draw lock icon
+    ctx.fillStyle='#555';
+    ctx.fillRect(10,14,12,10);
+    ctx.fillStyle='#444';
+    ctx.beginPath();
+    ctx.arc(16,14,5,Math.PI,0);
+    ctx.strokeStyle='#444';
+    ctx.lineWidth=3;
+    ctx.stroke();
+  }
+}
+
+// ══════════════════════════════════
+// RENDER — QUEST PAGE
+// ══════════════════════════════════
+function renderQuest() {
+  const pending = achievements.filter(a=>!a.unlocked);
+  let filtered = questFilter==='all' ? pending : pending.filter(a=>a.cat===questFilter);
+  
+  // group by setName
+  const sets = {};
+  filtered.forEach(a=>{
+    const k = a.setName||'Sin Set';
+    if(!sets[k]) sets[k]=[];
+    sets[k].push(a);
+  });
+  
+  const container = document.getElementById('questContent');
+  if(Object.keys(sets).length===0){
+    container.innerHTML=`<div class="empty-state"><div class="empty-icon">🎯</div><p>SIN OBJETIVOS PENDIENTES<br>USA LA IA PARA CREAR LOGROS</p></div>`;
+    return;
+  }
+  
+  container.innerHTML = Object.entries(sets).map(([setName,achs])=>{
+    const total = achievements.filter(a=>a.setName===setName).length;
+    const done = achievements.filter(a=>a.setName===setName&&a.unlocked).length;
+    const pct = total ? Math.round(done/total*100) : 0;
+    return `<div class="set-group">
+      <div class="set-header" onclick="toggleSet('set-${cssId(setName)}')">
+        <div class="set-header-name">📁 ${setName}</div>
+        <div class="set-header-stats">
+          <div class="set-progress-bar"><div class="set-progress-fill" style="width:${pct}%"></div></div>
+          <span style="font-size:13px">${done}/${total}</span>
+        </div>
+      </div>
+      <div class="set-body" id="set-${cssId(setName)}">
+        <div class="ach-grid">${achs.map(a=>achCardHtml(a)).join('')}</div>
+      </div>
+    </div>`;
+  }).join('');
+  
+  // render canvases after DOM
+  requestAnimationFrame(()=>{
+    filtered.forEach(a=>{
+      const el = document.getElementById('canvas-'+a.id);
+      if(el) renderAchIcon(a,el);
+    });
+  });
+}
+
+function toggleSet(id){
+  const el=document.getElementById(id);
+  if(!el) return;
+  if(el.style.display==='none'){el.style.display=''}
+  else{el.style.display='none'}
+}
+
+function cssId(str){ return str.replace(/[^a-zA-Z0-9]/g,'-') }
+
+// ══════════════════════════════════
+// RENDER — UNLOCKED PAGE
+// ══════════════════════════════════
+function renderUnlocked() {
+  let list = achievements.filter(a=>a.unlocked);
+  if(unlockFilter!=='all') list=list.filter(a=>a.rarity===unlockFilter);
+  list.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  
+  const grid = document.getElementById('unlockedGrid');
+  if(!list.length){
+    grid.innerHTML=`<div class="empty-state"><div class="empty-icon">🏆</div><p>AÚN NO HAS DESBLOQUEADO NADA<br>¡VE A TUS OBJETIVOS!</p></div>`;
+    return;
+  }
+  grid.innerHTML = list.map(a=>achCardHtml(a,true)).join('');
+  requestAnimationFrame(()=>{
+    list.forEach(a=>{ const el=document.getElementById('canvas-'+a.id); if(el) renderAchIcon(a,el); });
+  });
+}
+
+// ══════════════════════════════════
+// ACH CARD HTML
+// ══════════════════════════════════
+function achCardHtml(a, forceUnlocked=false) {
+  const cm = CAT_META[a.cat]||CAT_META.personal;
+  const locked = !a.unlocked && !forceUnlocked;
+  return `<div class="ach-card ${a.unlocked?'unlocked':'locked'} rarity-${a.rarity}">
+    <div class="ach-icon-wrap">
+      <canvas id="canvas-${a.id}" width="32" height="32"></canvas>
+      <div class="rarity-pip pip-${a.rarity}"></div>
+    </div>
+    <div class="ach-info">
+      <div class="ach-set-name">${a.setName||''}</div>
+      <div class="ach-name">${a.name}</div>
+      <div class="ach-desc">${a.desc}</div>
+      <div class="ach-meta">
+        <span class="ach-xp">+${a.xp} XP</span>
+        <span class="cat-tag cat-${a.cat}">${cm.icon} ${cm.label}</span>
+        <span class="rarity-tag rarity-${a.rarity}">${RARITY_LABEL[a.rarity]}</span>
+        ${a.unlocked?`<span class="ach-date">${a.date}</span>`:''}
+      </div>
+      <div class="ach-actions">
+        ${!a.unlocked?`<button class="btn-unlock" onclick="unlockAch(${a.id})">✅ DESBLOQUEAR</button>`:''}
+        <button class="btn-del" onclick="askDelete(${a.id})">✕ eliminar</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════
+// RENDER — HISTORY
+// ══════════════════════════════════
+function renderHistory() {
+  const sorted = [...history].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const list = document.getElementById('historyList');
+  if(!sorted.length){
+    list.innerHTML=`<div class="empty-state"><div class="empty-icon">📜</div><p>AÚN NO HAY HISTORIAL</p></div>`;
+    return;
+  }
+  list.innerHTML = sorted.map(h=>`
+    <div class="hist-item">
+      <canvas class="hist-canvas" id="hcanvas-${h.id}-${h.date}" width="32" height="32"></canvas>
+      <div class="hist-info">
+        <div class="hist-name">${h.name}</div>
+        <div class="hist-meta">
+          <span>${h.setName||''}</span>
+          <span class="hist-xp">+${h.xp} XP</span>
+          <span class="rarity-${h.rarity}">${RARITY_LABEL[h.rarity]}</span>
+          <span>${h.date}</span>
+        </div>
+      </div>
+    </div>`).join('');
+  requestAnimationFrame(()=>{
+    sorted.forEach(h=>{
+      const el=document.getElementById(`hcanvas-${h.id}-${h.date}`);
+      if(el){ const fakeAch={...h,unlocked:true}; renderAchIcon(fakeAch,el); }
+    });
+  });
+}
+
+// ══════════════════════════════════
+// RENDER — STATS
+// ══════════════════════════════════
+function renderStats() {
+  const total=achievements.length;
+  const unlocked=achievements.filter(a=>a.unlocked).length;
+  const xpTotal=achievements.filter(a=>a.unlocked).reduce((s,a)=>s+a.xp,0);
+  const legend=achievements.filter(a=>a.rarity==='legendary'&&a.unlocked).length;
+  const streakDays = calcStreak();
+  
+  document.getElementById('statsGrid').innerHTML=`
+    <div class="stat-card"><span class="stat-val">${unlocked}</span><div class="stat-lbl">Desbloqueados</div></div>
+    <div class="stat-card"><span class="stat-val">${total}</span><div class="stat-lbl">Total</div></div>
+    <div class="stat-card"><span class="stat-val">${total?Math.round(unlocked/total*100):0}%</span><div class="stat-lbl">Completado</div></div>
+    <div class="stat-card"><span class="stat-val">${xpTotal}</span><div class="stat-lbl">XP Total</div></div>
+    <div class="stat-card"><span class="stat-val">${getLvl(xpTotal)}</span><div class="stat-lbl">Nivel</div></div>
+    <div class="stat-card"><span class="stat-val">${legend}</span><div class="stat-lbl">Legendarios</div></div>
+    <div class="stat-card"><span class="stat-val">${streakDays}</span><div class="stat-lbl">Racha días</div></div>
+    <div class="stat-card"><span class="stat-val">${history.length}</span><div class="stat-lbl">En historial</div></div>
+  `;
+  
+  document.getElementById('catProgress').innerHTML = Object.entries(CAT_META).map(([k,v])=>{
+    const t=achievements.filter(a=>a.cat===k).length;
+    const u=achievements.filter(a=>a.cat===k&&a.unlocked).length;
+    const p=t?Math.round(u/t*100):0;
+    return `<div class="prog-row">
+      <div class="prog-label">${v.icon} ${v.label}</div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${p}%;background:${v.color}"></div></div>
+      <div class="prog-pct">${p}%</div>
+    </div>`;
+  }).join('');
+  
+  // sets progress
+  const sets={};
+  achievements.forEach(a=>{const k=a.setName||'Sin Set';if(!sets[k])sets[k]={t:0,u:0};sets[k].t++;if(a.unlocked)sets[k].u++;});
+  document.getElementById('setsProgress').innerHTML = Object.entries(sets).map(([name,s])=>{
+    const p=Math.round(s.u/s.t*100);
+    return `<div class="prog-row">
+      <div class="prog-label" style="width:150px;font-size:13px">📁 ${name.length>12?name.slice(0,12)+'…':name}</div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${p}%;background:var(--blue)"></div></div>
+      <div class="prog-pct">${p}%</div>
+    </div>`;
+  }).join('');
+  
+  document.getElementById('dataStats').textContent = `Logros: ${total} | Historial: ${history.length} entradas | Almacenamiento: ~${Math.round(JSON.stringify({achievements,history}).length/1024)}KB`;
+}
+
+function calcStreak(){
+  if(!history.length) return 0;
+  const dates=[...new Set(history.map(h=>h.date))].sort().reverse();
+  let streak=0,today=new Date().toISOString().split('T')[0],check=today;
+  for(const d of dates){
+    if(d===check){streak++;const dt=new Date(check);dt.setDate(dt.getDate()-1);check=dt.toISOString().split('T')[0];}
+    else break;
+  }
+  return streak;
+}
+
+// ══════════════════════════════════
+// RENDER — SOCIAL
+// ══════════════════════════════════
+const COMMUNITY_SETS = [
+  {user:'PixelRunner',lvl:12,sets:[
+    {name:'Maratón 2025',cat:'fitness',achievements:[
+      {name:'PRIMEROS 5K',desc:'Corre 5km sin parar',cat:'fitness',rarity:'common',icon:'🏃',xp:10},
+      {name:'CORREDOR',desc:'Corre 10km por primera vez',cat:'fitness',rarity:'rare',icon:'👟',xp:25},
+      {name:'MEDIO CAMINO',desc:'Completa una media maratón',cat:'fitness',rarity:'epic',icon:'🏅',xp:50},
+      {name:'MARATONISTA',desc:'Completa tu primera maratón 42km',cat:'fitness',rarity:'legendary',icon:'🏆',xp:100},
+    ]},
+  ]},
+  {user:'CodeWizard99',lvl:8,sets:[
+    {name:'Dev Journey',cat:'trabajo',achievements:[
+      {name:'HELLO WORLD',desc:'Escribe tu primer programa',cat:'trabajo',rarity:'common',icon:'💻',xp:10},
+      {name:'BUG HUNTER',desc:'Resuelve 50 problemas en LeetCode',cat:'aprendizaje',rarity:'rare',icon:'🐛',xp:25},
+      {name:'OPEN SOURCE',desc:'Haz un merge request aprobado en GitHub',cat:'trabajo',rarity:'epic',icon:'🔓',xp:50},
+      {name:'FULL STACK',desc:'Lanza una app con frontend+backend propios',cat:'trabajo',rarity:'legendary',icon:'🚀',xp:100},
+    ]},
+  ]},
+  {user:'ZenMaster',lvl:5,sets:[
+    {name:'Mente Clara',cat:'salud',achievements:[
+      {name:'PRIMER SILENCIO',desc:'Medita 5 minutos sin interrupción',cat:'salud',rarity:'common',icon:'🧘',xp:10},
+      {name:'SEMANA ZEN',desc:'7 días seguidos de meditación',cat:'salud',rarity:'rare',icon:'🌊',xp:25},
+      {name:'MENTE CLARA',desc:'30 días de práctica mindfulness',cat:'salud',rarity:'epic',icon:'🌸',xp:50},
+    ]},
+  ]},
+  {user:'InversionBro',lvl:7,sets:[
+    {name:'Libertad Financiera',cat:'finanzas',achievements:[
+      {name:'PRIMER AHORRO',desc:'Ahorra tu primer mes el 10% del sueldo',cat:'finanzas',rarity:'common',icon:'🐷',xp:10},
+      {name:'FONDO EMERGENCIA',desc:'Acumula 3 meses de gastos en reserva',cat:'finanzas',rarity:'rare',icon:'💰',xp:25},
+      {name:'INVERSOR',desc:'Abre una cuenta de inversión y haz tu primer aporte',cat:'finanzas',rarity:'epic',icon:'📈',xp:50},
+      {name:'RENTA PASIVA',desc:'Genera ingreso pasivo de al menos $100/mes',cat:'finanzas',rarity:'legendary',icon:'👑',xp:100},
+    ]},
+  ]},
+];
+
+function renderSocial() {
+  document.getElementById('myUsername').value = username;
+  document.getElementById('shareStatus').textContent = username ? `✅ Perfil: ${username}` : '';
+  
+  const list = document.getElementById('communityList');
+  list.innerHTML = COMMUNITY_SETS.map((u,ui)=>`
+    <div class="social-user-card" onclick="toggleUserSets('user-sets-${ui}')">
+      <canvas class="user-avatar" id="avatar-${ui}" width="32" height="32"></canvas>
+      <div class="user-info">
+        <div class="user-name">@${u.user}</div>
+        <div class="user-stats">Nivel <span>${u.lvl}</span> &nbsp;Sets: <span>${u.sets.length}</span> &nbsp;Logros: <span>${u.sets.reduce((s,st)=>s+st.achievements.length,0)}</span></div>
+        <div class="user-sets-preview">${u.sets.map(s=>`<span class="set-chip">📁 ${s.name}</span>`).join('')}</div>
+      </div>
+    </div>
+    <div id="user-sets-${ui}" style="display:none;padding:0 0 16px 16px">
+      ${u.sets.map((st,si)=>`
+        <div style="background:var(--panel2);border:2px solid var(--border2);padding:12px;margin-bottom:10px">
+          <div style="font-family:'Press Start 2P',monospace;font-size:8px;color:var(--blue);margin-bottom:8px">📁 ${st.name}</div>
+          <div style="font-size:14px;color:var(--dim);margin-bottom:10px">${st.achievements.length} logros • Categoría: ${CAT_META[st.cat]?.label||st.cat}</div>
+          <div class="ach-grid" style="margin-bottom:10px">
+            ${st.achievements.map(a=>`
+              <div class="ach-card rarity-${a.rarity}" style="padding:10px;gap:8px">
+                <div class="ach-icon-wrap" style="width:40px;height:40px">
+                  <canvas id="soc-canvas-${ui}-${si}-${a.name.replace(/\s/g,'')}" width="32" height="32" style="width:40px;height:40px"></canvas>
+                  <div class="rarity-pip pip-${a.rarity}"></div>
+                </div>
+                <div class="ach-info">
+                  <div class="ach-name" style="font-size:6px">${a.name}</div>
+                  <div class="ach-desc" style="font-size:13px">${a.desc}</div>
+                  <div class="ach-meta"><span class="ach-xp">+${a.xp} XP</span><span class="rarity-${a.rarity}" style="font-size:12px">${RARITY_LABEL[a.rarity]}</span></div>
+                </div>
+              </div>`).join('')}
+          </div>
+          <button class="btn btn-green btn-sm" onclick="importSet(${ui},${si})">📥 IMPORTAR ESTE SET</button>
+        </div>`).join('')}
+    </div>`).join('');
+  
+  requestAnimationFrame(()=>{
+    // render avatars
+    COMMUNITY_SETS.forEach((u,ui)=>{
+      const el=document.getElementById('avatar-'+ui);
+      if(el){ const fk={id:ui*100,name:u.user,rarity:'rare',unlocked:true}; renderAchIcon(fk,el); }
+    });
+  });
+}
+
+function toggleUserSets(id){
+  const el=document.getElementById(id);
+  if(!el) return;
+  const showing=el.style.display!=='none';
+  el.style.display=showing?'none':'block';
+  if(!showing){
+    // render social canvases
+    requestAnimationFrame(()=>{
+      const idx=parseInt(id.replace('user-sets-',''));
+      COMMUNITY_SETS[idx].sets.forEach((st,si)=>{
+        st.achievements.forEach(a=>{
+          const cid=`soc-canvas-${idx}-${si}-${a.name.replace(/\s/g,'')}`;
+          const el=document.getElementById(cid);
+          if(el) renderAchIcon({...a,id:idx*10000+si*100+a.name.length,unlocked:false},el);
+        });
+      });
+    });
+  }
+}
+
+function importSet(ui, si) {
+  const set = COMMUNITY_SETS[ui].sets[si];
+  const existing = achievements.filter(a=>a.setName===set.name&&!a.unlocked).length;
+  if(existing>0){
+    alert(`Ya tienes "${set.name}" en tus objetivos.`); return;
+  }
+  const nextId = achievements.length ? Math.max(...achievements.map(a=>a.id))+1 : 1;
+  set.achievements.forEach((a,i)=>{
+    const already = achievements.find(x=>x.name===a.name&&x.setName===set.name);
+    if(!already){
+      achievements.push({...a,id:nextId+i,setName:set.name,xp:RARITY_XP[a.rarity],unlocked:false,date:null});
+    }
+  });
+  save(); renderAll();
+  goPage('page-quest', document.querySelector('[data-page="page-quest"]'));
+  setTimeout(()=>showToast(`✅ Set "${set.name}" importado con ${set.achievements.length} logros`),300);
+}
+
+// ══════════════════════════════════
+// UNLOCK
+// ══════════════════════════════════
+function unlockAch(id) {
+  const a = achievements.find(x=>x.id===id);
+  if(!a||a.unlocked) return;
+  a.unlocked=true;
+  a.date=new Date().toISOString().split('T')[0];
+  history.push({id:a.id,name:a.name,icon:a.icon,xp:a.xp,rarity:a.rarity,cat:a.cat,date:a.date,setName:a.setName});
+  save(); renderAll(); showUnlockPopup(a);
+}
+
+function showUnlockPopup(a){
+  const popup=document.getElementById('unlockPopup');
+  document.getElementById('popupName').textContent=a.name;
+  document.getElementById('popupXp').textContent=`+${a.xp} XP — ${RARITY_LABEL[a.rarity]}`;
+  const pc=document.getElementById('popupCanvas');
+  renderAchIcon({...a,unlocked:true},pc);
+  popup.classList.add('show');
+  setTimeout(()=>popup.classList.remove('show'),4000);
+}
+
+// ══════════════════════════════════
+// DELETE
+// ══════════════════════════════════
+function askDelete(id){
+  const a=achievements.find(x=>x.id===id);
+  if(!a) return;
+  pendingDeleteId=id;
+  document.getElementById('confirmMsg').textContent=`¿Eliminar "${a.name}"? Esta acción no se puede deshacer.`;
+  document.getElementById('confirmOkBtn').onclick=()=>{ doDelete(id); closeModal('confirmModal'); };
+  document.getElementById('confirmModal').classList.add('show');
+}
+
+function doDelete(id){
+  achievements=achievements.filter(a=>a.id!==id);
+  history=history.filter(h=>h.id!==id);
+  save(); renderAll();
+}
+
+// ══════════════════════════════════
+// FILTERS
+// ══════════════════════════════════
+function setQuestFilter(f,el){
+  questFilter=f;
+  document.querySelectorAll('#questFilters .fbtn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderQuest();
+}
+
+function setUnlockFilter(f,el){
+  unlockFilter=f;
+  document.querySelectorAll('#page-unlocked .fbtn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderUnlocked();
+}
+
+// ══════════════════════════════════
+// AI GENERATION
+// ══════════════════════════════════
+async function runAI() {
+  const input=document.getElementById('aiInput').value.trim();
+  if(!input){ document.getElementById('aiInput').focus(); return; }
+  const activeKey = aiProvider==='gemini' ? geminiKey : apiKey;
+  if(!activeKey){ showToast('⚠️ Configura tu API key en ⚙ CONFIG'); goPage('page-settings',document.querySelector('[data-page="page-settings"]')); return; }
+  
+  const cat=document.getElementById('aiCat').value;
+  const count=parseInt(document.getElementById('aiCount').value);
+  const status=document.getElementById('aiStatus');
+  status.classList.add('visible');
+  document.querySelector('.ai-panel .btn-purple').disabled=true;
+  
+  const result = await callAI(input, cat, count);
+  status.classList.remove('visible');
+  document.querySelector('.ai-panel .btn-purple').disabled=false;
+  
+  if(result){
+    result.forEach(a=>achievements.push(a));
+    save(); renderAll();
+    document.getElementById('aiInput').value='';
+    showToast(`✅ ${result.length} logros creados en "${result[0].setName}"`);
+  } else {
+    showToast('❌ Error generando logros. Verifica tu API key.');
+  }
+}
+
+function buildPrompt(context, catHint, count) {
+  const catInstr = catHint!=='auto' ? `Usa principalmente la categoría "${catHint}".` : 'Detecta automáticamente la mejor categoría.';
+  return `Eres un diseñador de logros gamificados para una app de vida al estilo RetroAchievements.
+
+El usuario describe: "${context}"
+
+Genera exactamente ${count} logros de vida en español. ${catInstr}
+
+IMPORTANTE: Todos los logros pertenecen a un mismo SET temático.
+
+Responde SOLO con JSON válido, sin texto ni backticks:
+{
+  "setName": "Nombre épico del set (máx 20 chars)",
+  "achievements": [
+    {
+      "name": "NOMBRE EN MAYÚSCULAS MÁX 4 PALABRAS",
+      "desc": "Descripción concreta 1-2 oraciones",
+      "cat": "salud|fitness|trabajo|social|aprendizaje|finanzas|creatividad|personal",
+      "rarity": "common|rare|epic|legendary",
+      "icon": "emoji"
+    }
+  ]
+}
+
+Reglas: setName épico, rarezas variadas (más comunes que legendarios), nombres estilo videojuego retro, logros escalonados fácil→difícil.`;
+}
+
+function parseAIResponse(text) {
+  const clean = text.replace(/```json|```/g,'').trim();
+  const parsed = JSON.parse(clean);
+  const nextId = achievements.length ? Math.max(...achievements.map(a=>a.id))+1 : 1;
+  return parsed.achievements.map((a,i)=>({
+    ...a, id:nextId+i, setName:parsed.setName||'Mi Set',
+    xp:RARITY_XP[a.rarity]||10, unlocked:false, date:null
+  }));
+}
+
+async function callAI(context, catHint, count) {
+  const prompt = buildPrompt(context, catHint, count);
+  try {
+    if (aiProvider === 'gemini') {
+      return await callGemini(prompt);
+    } else {
+      return await callAnthropic(prompt);
+    }
+  } catch(e) {
+    console.error(e); return null;
+  }
+}
+
+async function callAnthropic(prompt) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1200,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  const text = data.content?.[0]?.text || '{}';
+  return parseAIResponse(text);
+}
+
+async function callGemini(prompt) {
+  const model = 'gemini-2.0-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.9, maxOutputTokens: 1200 }
+    })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+  return parseAIResponse(text);
+}
+
+// ══════════════════════════════════
+// MANUAL CREATE
+// ══════════════════════════════════
+function openCreateModal() {
+  editingId=null;
+  document.getElementById('createModalTitle').textContent='✏️ CREAR LOGRO MANUAL';
+  document.getElementById('mSetName').value='';
+  document.getElementById('mName').value='';
+  document.getElementById('mDesc').value='';
+  document.getElementById('mCat').value='personal';
+  document.getElementById('mRarity').value='common';
+  selectedEmoji='🏆';
+  buildEmojiPicker();
+  document.getElementById('createModal').classList.add('show');
+}
+
+function saveManualAch() {
+  const name=document.getElementById('mName').value.trim().toUpperCase();
+  const desc=document.getElementById('mDesc').value.trim();
+  const setName=document.getElementById('mSetName').value.trim()||'Mis Logros';
+  if(!name||!desc){ showToast('⚠️ Nombre y descripción requeridos'); return; }
+  const cat=document.getElementById('mCat').value;
+  const rarity=document.getElementById('mRarity').value;
+  if(editingId){
+    const a=achievements.find(x=>x.id===editingId);
+    if(a){ Object.assign(a,{name,desc,setName,cat,rarity,icon:selectedEmoji,xp:RARITY_XP[rarity]}); }
+  } else {
+    const nextId=achievements.length ? Math.max(...achievements.map(a=>a.id))+1 : 1;
+    achievements.push({id:nextId,name,desc,setName,cat,rarity,icon:selectedEmoji,xp:RARITY_XP[rarity],unlocked:false,date:null});
+  }
+  save(); renderAll(); closeModal('createModal');
+}
+
+function buildEmojiPicker(){
+  document.getElementById('emojiPicker').innerHTML=EMOJIS.map(e=>`<div class="emoji-opt ${e===selectedEmoji?'selected':''}" onclick="pickEmoji('${e}',this)">${e}</div>`).join('');
+}
+
+function pickEmoji(e,el){
+  selectedEmoji=e;
+  document.querySelectorAll('.emoji-opt').forEach(x=>x.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ══════════════════════════════════
+// SOCIAL — EXPORT/IMPORT
+// ══════════════════════════════════
+function exportProfile(){
+  const sets={};
+  achievements.forEach(a=>{
+    const k=a.setName||'Sin Set';
+    if(!sets[k]) sets[k]=[];
+    sets[k].push({name:a.name,desc:a.desc,cat:a.cat,rarity:a.rarity,icon:a.icon,xp:a.xp});
+  });
+  const profile={
+    user:username||'Anónimo',
+    lvl:getLvl(achievements.filter(a=>a.unlocked).reduce((s,a)=>s+a.xp,0)),
+    sets:Object.entries(sets).map(([name,achievements])=>({name,achievements}))
+  };
+  const code=btoa(JSON.stringify(profile));
+  navigator.clipboard?.writeText(code).then(()=>showToast('✅ Código copiado al portapapeles')).catch(()=>{
+    prompt('Copia este código de perfil:',code);
+  });
+}
+
+function openImportProfile(){
+  document.getElementById('importInput').value='';
+  document.getElementById('importModal').classList.add('show');
+}
+
+function doImportProfile(){
+  const raw=document.getElementById('importInput').value.trim();
+  try {
+    const profile=JSON.parse(atob(raw));
+    if(!profile.sets) throw new Error('Formato inválido');
+    let added=0;
+    profile.sets.forEach(set=>{
+      const existing=achievements.filter(a=>a.setName===set.name).length;
+      if(existing>0) return;
+      const nextId=achievements.length ? Math.max(...achievements.map(a=>a.id))+1 : 1;
+      set.achievements.forEach((a,i)=>{
+        achievements.push({...a,id:nextId+i,setName:set.name,xp:a.xp||RARITY_XP[a.rarity]||10,unlocked:false,date:null});
+        added++;
+      });
+    });
+    save(); renderAll(); closeModal('importModal');
+    showToast(`✅ ${added} logros importados de @${profile.user}`);
+  } catch(e) { showToast('❌ Código inválido'); }
+}
+
+// ══════════════════════════════════
+// DATA EXPORT/IMPORT/RESET
+// ══════════════════════════════════
+function exportData(){
+  const data=JSON.stringify({achievements,history,username},null,2);
+  const blob=new Blob([data],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='life-exe-backup.json'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function openImportData(){
+  document.getElementById('importDataInput').value='';
+  document.getElementById('importDataModal').classList.add('show');
+}
+
+function doImportData(){
+  try {
+    const data=JSON.parse(document.getElementById('importDataInput').value);
+    if(data.achievements) achievements=data.achievements;
+    if(data.history) history=data.history;
+    if(data.username){ username=data.username; localStorage.setItem('lifeExeUsername',username); }
+    save(); renderAll(); closeModal('importDataModal');
+    showToast('✅ Datos importados correctamente');
+  } catch(e){ showToast('❌ JSON inválido'); }
+}
+
+function confirmReset(){
+  pendingDeleteId=null;
+  document.getElementById('confirmMsg').textContent='¿Resetear TODOS los datos? Se perderán todos tus logros e historial.';
+  document.getElementById('confirmOkBtn').onclick=()=>{ localStorage.clear(); location.reload(); };
+  document.getElementById('confirmModal').classList.add('show');
+}
+
+// ══════════════════════════════════
+// HEADER UPDATE
+// ══════════════════════════════════
+function updateHeader(){
+  const xp=achievements.filter(a=>a.unlocked).reduce((s,a)=>s+a.xp,0);
+  const lvl=getLvl(xp);
+  const xpPrev=(lvl-1)*100, xpNext=lvl*100;
+  const pct=Math.min(100,Math.round((xp-xpPrev)/(xpNext-xpPrev)*100));
+  document.getElementById('lvlBadge').textContent=`LVL ${lvl}`;
+  document.getElementById('xpFill').style.width=pct+'%';
+  document.getElementById('xpText').textContent=`${xp} XP`;
+  document.getElementById('hUnlocked').textContent=achievements.filter(a=>a.unlocked).length;
+  document.getElementById('hTotal').textContent=achievements.length;
+  updateTicker();
+}
+
+function getLvl(xp){ return Math.max(1,Math.floor(xp/100)+1); }
+
+function updateTicker(){
+  const unlocked=achievements.filter(a=>a.unlocked);
+  if(!unlocked.length) return;
+  const random=unlocked[Math.floor(Math.random()*unlocked.length)];
+  document.getElementById('tickerText').textContent=`⚡ LIFE.EXE ⚡ ${random.name} DESBLOQUEADO ⚡ NIVEL ${getLvl(unlocked.reduce((s,a)=>s+a.xp,0))} ⚡ ${achievements.filter(a=>a.unlocked).length}/${achievements.length} LOGROS ⚡`;
+}
+
+// ══════════════════════════════════
+// TOAST
+// ══════════════════════════════════
+function showToast(msg){
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--panel);border:2px solid var(--blue);color:var(--text);padding:10px 18px;font-size:15px;z-index:999;white-space:nowrap;box-shadow:4px 4px 0 #000;max-width:90vw;text-overflow:ellipsis;overflow:hidden';
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3000);
+}
+
+// ══════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════
+function goPage(id, el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(el) el.classList.add('active');
+  // lazy render
+  if(id==='page-unlocked') renderUnlocked();
+  else if(id==='page-history') renderHistory();
+  else if(id==='page-stats') renderStats();
+  else if(id==='page-social') renderSocial();
+  else if(id==='page-settings'){
+    document.getElementById('apiKeyInput').value=apiKey;
+    if(document.getElementById('geminiKeyInput')) document.getElementById('geminiKeyInput').value=geminiKey;
+    selectProvider(aiProvider);
+    renderStats();
+  }
+}
+
+// ══════════════════════════════════
+// MODALS
+// ══════════════════════════════════
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.show').forEach(m=>m.classList.remove('show')); });
+
+// ══════════════════════════════════
+// RENDER ALL
+// ══════════════════════════════════
+function renderAll(){
+  renderQuest();
+  updateHeader();
+}
+
+// ══════════════════════════════════
+// PWA / INSTALL
+// ══════════════════════════════════
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault(); deferredPrompt=e;
+  document.getElementById('installBanner').classList.add('show');
+});
+
+function setupInstallBtns(){
+  [document.getElementById('installBtn'),document.getElementById('installBtn2')].forEach(btn=>{
+    if(btn) btn.onclick=async()=>{
+      if(deferredPrompt){ deferredPrompt.prompt(); const r=await deferredPrompt.userChoice; deferredPrompt=null; document.getElementById('installBanner').classList.remove('show'); }
+      else showToast('Abre en Chrome y usa "Añadir a pantalla de inicio"');
+    };
+  });
+}
+
+// ══════════════════════════════════
+// INIT
+// ══════════════════════════════════
+load();
+renderAll();
+buildEmojiPicker();
+setupInstallBtns();
+// init provider UI labels (settings page loaded lazily)
+// stored in state, applied when settings opens
+
+// Register service worker for PWA
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
